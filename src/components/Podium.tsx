@@ -10,13 +10,18 @@ export function Podium({ entries }: PodiumProps) {
   const top3 = entries.slice(0, 3);
 
   // Compute tie-aware ranks for top 3
-  const ranks = top3.map((entry, i) => {
-    if (i === 0) return 1;
-    const prev = top3[i - 1];
-    if (entry.score === prev.score && entry.correctPicks === prev.correctPicks) {
-      return ranks[i - 1];
+  const ranks: number[] = [];
+  top3.forEach((entry, i) => {
+    if (i === 0) {
+      ranks.push(1);
+    } else {
+      const prev = top3[i - 1];
+      ranks.push(
+        entry.score === prev.score && entry.correctPicks === prev.correctPicks
+          ? ranks[i - 1]
+          : i + 1
+      );
     }
-    return i + 1;
   });
 
   const heightByRank: Record<number, number> = { 1: 160, 2: 120, 3: 90 };
@@ -24,7 +29,7 @@ export function Podium({ entries }: PodiumProps) {
   const labelByRank: Record<number, string> = { 1: '1st', 2: '2nd', 3: '3rd' };
 
   // Reorder for display: 2nd, 1st, 3rd (only when no ties at top)
-  const allTiedForFirst = top3.length >= 2 && ranks.every(r => r === 1);
+  const allTiedForFirst = top3.length >= 2 && ranks.every((r: number) => r === 1);
   const displayOrder = top3.length >= 3 && !allTiedForFirst
     ? [{ entry: top3[1], rank: ranks[1] }, { entry: top3[0], rank: ranks[0] }, { entry: top3[2], rank: ranks[2] }]
     : top3.map((entry, i) => ({ entry, rank: ranks[i] }));
