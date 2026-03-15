@@ -155,11 +155,11 @@ export const categories: Category[] = [
     name: 'Documentary Short Film',
     type: 'film',
     nominees: [
-      { id: 'ds-1', name: 'Nominee 1 (TBD)' },
-      { id: 'ds-2', name: 'Nominee 2 (TBD)' },
-      { id: 'ds-3', name: 'Nominee 3 (TBD)' },
-      { id: 'ds-4', name: 'Nominee 4 (TBD)' },
-      { id: 'ds-5', name: 'Nominee 5 (TBD)' },
+      { id: 'ds-rooms', name: 'All the Empty Rooms' },
+      { id: 'ds-armed', name: 'Armed Only with a Camera' },
+      { id: 'ds-children', name: 'Children No More' },
+      { id: 'ds-devil', name: 'The Devil Is Busy' },
+      { id: 'ds-strangeness', name: 'Perfectly a Strangeness' },
     ],
   },
   {
@@ -203,11 +203,11 @@ export const categories: Category[] = [
     name: 'Makeup and Hairstyling',
     type: 'film',
     nominees: [
-      { id: 'mh-1', name: 'Nominee 1 (TBD)' },
-      { id: 'mh-2', name: 'Nominee 2 (TBD)' },
-      { id: 'mh-3', name: 'Nominee 3 (TBD)' },
-      { id: 'mh-4', name: 'Nominee 4 (TBD)' },
-      { id: 'mh-5', name: 'Nominee 5 (TBD)' },
+      { id: 'mh-frank', name: 'Frankenstein' },
+      { id: 'mh-kokuho', name: 'Kokuho' },
+      { id: 'mh-sinners', name: 'Sinners' },
+      { id: 'mh-smashing', name: 'The Smashing Machine' },
+      { id: 'mh-stepsister', name: 'The Ugly Stepsister' },
     ],
   },
   {

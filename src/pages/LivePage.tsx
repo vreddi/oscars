@@ -24,32 +24,51 @@ export function LivePage() {
   const leaderboard = useLeaderboard();
   const [activeTab, setActiveTab] = useState(0);
   const [showCorrect, setShowCorrect] = useState(false);
-  const prevRevealedCount = useRef(0);
+  const prevRevealedKeys = useRef<Set<string>>(new Set());
+  const initializedRef = useRef(false);
 
-  const [playCorrect] = useSound('/sounds/correct.mp3', { volume: 0.5 });
+  const [playSuccess] = useSound('/sounds/success.mp3', { volume: 0.5 });
+  const [playOhNo1] = useSound('/sounds/oh-no-1.mp3', { volume: 0.5 });
+  const [playOhNo2] = useSound('/sounds/oh-no-2.mp3', { volume: 0.5 });
 
   useEffect(() => {
     if (gameCode) setGameCode(gameCode);
   }, [gameCode, setGameCode]);
 
-  // Detect new reveals and check if correct
+  // Detect new reveals, play sounds, trigger confetti
   useEffect(() => {
     if (!game || !predictions) return;
-    const revealedCount = Object.keys(game.revealedCategories).length;
-    if (revealedCount > prevRevealedCount.current && prevRevealedCount.current > 0) {
-      // Check the latest revealed category
-      const latestIndex = Object.keys(game.revealedCategories).pop();
-      if (latestIndex !== undefined) {
-        const revealed = game.revealedCategories[latestIndex];
-        const pick = predictions.picks[latestIndex];
-        if (pick === revealed.winnerId) {
-          setShowCorrect(true);
-          try { playCorrect(); } catch {}
-          setTimeout(() => setShowCorrect(false), 2000);
-        }
+
+    const currentKeys = new Set(Object.keys(game.revealedCategories));
+
+    // On first load, just record existing reveals without triggering sounds
+    if (!initializedRef.current) {
+      prevRevealedKeys.current = currentKeys;
+      initializedRef.current = true;
+      return;
+    }
+
+    // Find newly revealed categories
+    const newKeys = [...currentKeys].filter(k => !prevRevealedKeys.current.has(k));
+
+    for (const key of newKeys) {
+      const revealed = game.revealedCategories[key];
+      const pick = predictions.picks[key];
+
+      if (pick === revealed.winnerId) {
+        // Correct pick: confetti + success sound
+        setShowCorrect(true);
+        try { playSuccess(); } catch {}
+        setTimeout(() => setShowCorrect(false), 3000);
+      } else {
+        // Wrong pick: random oh-no sound
+        try {
+          if (Math.random() > 0.5) { playOhNo1(); } else { playOhNo2(); }
+        } catch {}
       }
     }
-    prevRevealedCount.current = revealedCount;
+
+    prevRevealedKeys.current = currentKeys;
   }, [game?.revealedCategories, predictions]);
 
   if (!game || !user || !predictions) {
