@@ -1,0 +1,28 @@
+:root {
+  --black: #0D0D0D;
+  --black-light: #1A1A1A;
+  --black-card: #222222;
+  --black-hover: #2A2A2A;
+  --gold: #C5A44E;
+  --gold-light: #E8D48B;
+  --gold-dim: #8B7535;
+  --ivory: #F5F0E8;
+  --ivory-dim: #B8B3AB;
+  --green: #4CAF50;
+  --red: #E53935;
+  --red-bg: #3D1A1A;
+  --green-bg: #1A3D1A;
+
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(197, 164, 78, 0.3);
+
+  --transition: 200ms ease;
+}
