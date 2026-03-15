@@ -4,7 +4,12 @@ import { useAuthContext } from '../context/AuthContext';
 import { useGameContext } from '../context/GameContext';
 import { generateGameCode } from '../utils/gameCode';
 import { MAX_PLAYERS } from '../config/constants';
-import type { GameDoc } from '../types';
+import type { GameDoc, GamePhase, PredictionDoc } from '../types';
+
+export interface JoinResult {
+  phase: GamePhase;
+  picksLocked: boolean;
+}
 
 export function useGame() {
   const { user, displayName, avatarSeed } = useAuthContext();
@@ -35,7 +40,7 @@ export function useGame() {
     return code;
   };
 
-  const joinGame = async (code: string): Promise<void> => {
+  const joinGame = async (code: string): Promise<JoinResult> => {
     if (!user || !displayName) throw new Error('Not signed in');
 
     const upperCode = code.toUpperCase();
@@ -47,7 +52,9 @@ export function useGame() {
     // Already in the game with current UID
     if (data.players[user.uid]) {
       setGameCode(upperCode);
-      return;
+      const predSnap = await getDoc(doc(db, 'games', upperCode, 'predictions', user.uid));
+      const picksLocked = predSnap.exists() && !!(predSnap.data() as PredictionDoc).lockedAt;
+      return { phase: data.phase, picksLocked };
     }
 
     // Check for rejoin: same displayName under a different UID (e.g. lost session)
@@ -68,14 +75,16 @@ export function useGame() {
       });
 
       // Migrate predictions if they exist
+      let picksLocked = false;
       const predSnap = await getDoc(doc(db, 'games', upperCode, 'predictions', oldUid));
       if (predSnap.exists()) {
         await setDoc(doc(db, 'games', upperCode, 'predictions', user.uid), predSnap.data());
         await deleteDoc(doc(db, 'games', upperCode, 'predictions', oldUid));
+        picksLocked = !!(predSnap.data() as PredictionDoc).lockedAt;
       }
 
       setGameCode(upperCode);
-      return;
+      return { phase: data.phase, picksLocked };
     }
 
     // New player joining
@@ -92,6 +101,7 @@ export function useGame() {
       },
     });
     setGameCode(upperCode);
+    return { phase: data.phase, picksLocked: false };
   };
 
   const joinAsHost = async (code: string): Promise<void> => {

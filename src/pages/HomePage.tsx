@@ -76,8 +76,19 @@ export function HomePage() {
     setLoading(true);
     setError('');
     try {
-      await joinGame(joinCode.trim());
-      navigate(`/lobby/${joinCode.trim().toUpperCase()}`);
+      const result = await joinGame(joinCode.trim());
+      const code = joinCode.trim().toUpperCase();
+
+      // Navigate directly to the right page based on game state
+      if (result.phase === 'ended') {
+        navigate(`/results/${code}`);
+      } else if (result.phase === 'live' || (result.picksLocked && result.phase !== 'lobby')) {
+        navigate(`/live/${code}`);
+      } else if (result.phase === 'predictions') {
+        navigate(`/predict/${code}`);
+      } else {
+        navigate(`/lobby/${code}`);
+      }
     } catch (e: any) {
       setError(e.message);
     }
