@@ -8,10 +8,11 @@ import { generateRandomSeed, playAvatarSound, getGender } from '../utils/avatarS
 export function HomePage() {
   const navigate = useNavigate();
   const { user, displayName, avatarSeed, signIn, updateAvatarSeed } = useAuthContext();
-  const { createGame, joinGame } = useGame();
+  const { createGame, joinGame, joinAsHost } = useGame();
 
   const [name, setName] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const [hostCode, setHostCode] = useState('');
   const [testMode, setTestMode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -77,6 +78,19 @@ export function HomePage() {
     try {
       await joinGame(joinCode.trim());
       navigate(`/lobby/${joinCode.trim().toUpperCase()}`);
+    } catch (e: any) {
+      setError(e.message);
+    }
+    setLoading(false);
+  };
+
+  const handleHost = async () => {
+    if (!hostCode.trim()) return;
+    setLoading(true);
+    setError('');
+    try {
+      await joinAsHost(hostCode.trim());
+      navigate(`/admin/${hostCode.trim().toUpperCase()}`);
     } catch (e: any) {
       setError(e.message);
     }
@@ -288,6 +302,48 @@ export function HomePage() {
             >
               Join
             </button>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            color: 'var(--ivory-dim)',
+            fontSize: '0.8rem',
+            justifyContent: 'center',
+            marginTop: 4,
+          }}>
+            <div style={{ height: 1, flex: 1, background: '#333' }} />
+            <span>or host a game</span>
+            <div style={{ height: 1, flex: 1, background: '#333' }} />
+          </div>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              className="input"
+              type="text"
+              placeholder="OSCAR-XXXX"
+              value={hostCode}
+              onChange={(e) => setHostCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && handleHost()}
+              style={{ textTransform: 'uppercase', letterSpacing: 1 }}
+            />
+            <button
+              className="btn-secondary"
+              onClick={handleHost}
+              disabled={!hostCode.trim() || loading}
+              style={{
+                width: 'auto',
+                padding: '12px 20px',
+                borderColor: 'var(--gold)',
+                color: 'var(--gold)',
+              }}
+            >
+              Host
+            </button>
+          </div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--ivory-dim)', textAlign: 'center' }}>
+            Host controls the ceremony without playing
           </div>
         </div>
       )}

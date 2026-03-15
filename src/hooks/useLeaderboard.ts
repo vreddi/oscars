@@ -20,7 +20,7 @@ export function useLeaderboard() {
         snap.forEach((predDoc) => {
           const uid = predDoc.id;
           const player = game.players[uid];
-          if (!player) return;
+          if (!player || player.isHost) return;
 
           const data = predDoc.data() as PredictionDoc;
           const { score, correctPicks } = calculateScore(

@@ -32,7 +32,7 @@ export function LobbyPage() {
   }
 
   const isAdmin = game.players[user.uid]?.isAdmin;
-  const playerList = Object.entries(game.players);
+  const playerList = Object.entries(game.players).filter(([, p]) => !p.isHost);
 
   const addBot = async () => {
     if (!paramCode) return;

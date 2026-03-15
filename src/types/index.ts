@@ -11,6 +11,7 @@ export interface Player {
   avatarSeed: string;
   joinedAt: Timestamp;
   isAdmin: boolean;
+  isHost?: boolean;
 }
 
 export type GamePhase = 'lobby' | 'predictions' | 'live' | 'ended';
