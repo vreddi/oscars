@@ -87,22 +87,35 @@ export function LivePage() {
           /* ---- Ceremony ended: show podium + full results ---- */
           <div>
             <div style={{ textAlign: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: '2.5rem' }}>🏆</div>
-              <h1 style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: '1.8rem',
-                background: 'linear-gradient(135deg, var(--gold), var(--gold-light))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: 4,
-              }}>
-                Final Results
-              </h1>
-              {leaderboard[0] && (
-                <p style={{ color: 'var(--ivory-dim)', fontSize: '0.9rem' }}>
-                  {leaderboard[0].displayName} wins with {leaderboard[0].score} points!
-                </p>
-              )}
+              {(() => {
+                const winner = leaderboard[0];
+                const tiedWinners = winner
+                  ? leaderboard.filter(e => e.score === winner.score && e.correctPicks === winner.correctPicks)
+                  : [];
+                const isTie = tiedWinners.length > 1;
+                return (
+                  <>
+                    <div style={{ fontSize: '2.5rem' }}>{isTie ? '🤝' : '🏆'}</div>
+                    <h1 style={{
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: '1.8rem',
+                      background: 'linear-gradient(135deg, var(--gold), var(--gold-light))',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      marginBottom: 4,
+                    }}>
+                      Final Results
+                    </h1>
+                    {winner && (
+                      <p style={{ color: 'var(--ivory-dim)', fontSize: '0.9rem' }}>
+                        {isTie
+                          ? `It's a tie! ${tiedWinners.map(w => w.displayName).join(' & ')} tied with ${winner.score} points!`
+                          : `${winner.displayName} wins with ${winner.score} points!`}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             <Podium entries={leaderboard} />

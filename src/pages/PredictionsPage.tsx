@@ -94,15 +94,17 @@ export function PredictionsPage() {
           </div>
         )}
 
-        {game.testMode && !locked && (
+        {!locked && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <button
-              className="btn-secondary"
-              onClick={() => randomizePicks(categories)}
-              style={{ flex: 1 }}
-            >
-              Randomize Picks
-            </button>
+            {game.testMode && (
+              <button
+                className="btn-secondary"
+                onClick={() => randomizePicks(categories)}
+                style={{ flex: 1 }}
+              >
+                Randomize Picks
+              </button>
+            )}
             <button
               className="btn-secondary"
               onClick={lockPicks}

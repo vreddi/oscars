@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useGameContext } from '../context/GameContext';
 import { useAdmin } from '../hooks/useAdmin';
@@ -16,6 +16,7 @@ const TABS = ['Controls', 'Leaderboard', 'Live View'];
 
 export function AdminPage() {
   const { gameCode } = useParams<{ gameCode: string }>();
+  const navigate = useNavigate();
   const { user } = useAuthContext();
   const { game, setGameCode } = useGameContext();
   const { setCurrentCategory, revealWinner, endCeremony } = useAdmin();
@@ -28,6 +29,10 @@ export function AdminPage() {
   useEffect(() => {
     if (gameCode) setGameCode(gameCode);
   }, [gameCode, setGameCode]);
+
+  useEffect(() => {
+    if (game?.phase === 'ended') navigate(`/results/${gameCode}`);
+  }, [game?.phase, gameCode, navigate]);
 
   if (!game || !user) {
     return <div className="page" style={{ textAlign: 'center', paddingTop: 80 }}>Loading...</div>;
