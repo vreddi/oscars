@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuthContext } from '../context/AuthContext';
 import { useGameContext } from '../context/GameContext';
@@ -43,13 +43,45 @@ export function useGame() {
     if (!snap.exists()) throw new Error('Game not found');
 
     const data = snap.data() as GameDoc;
-    if (data.phase !== 'lobby') throw new Error('Game already started');
-    const playerCount = Object.values(data.players).filter(p => !p.isHost).length;
-    if (playerCount >= MAX_PLAYERS) throw new Error('Game is full');
+
+    // Already in the game with current UID
     if (data.players[user.uid]) {
       setGameCode(upperCode);
       return;
     }
+
+    // Check for rejoin: same displayName under a different UID (e.g. lost session)
+    const existingEntry = Object.entries(data.players).find(
+      ([, p]) => p.displayName === displayName && !p.isHost
+    );
+
+    if (existingEntry) {
+      const [oldUid, oldPlayer] = existingEntry;
+
+      // Migrate player slot to new UID
+      await updateDoc(doc(db, 'games', upperCode), {
+        [`players.${user.uid}`]: {
+          ...oldPlayer,
+          avatarSeed: oldPlayer.avatarSeed,
+        },
+        [`players.${oldUid}`]: deleteField(),
+      });
+
+      // Migrate predictions if they exist
+      const predSnap = await getDoc(doc(db, 'games', upperCode, 'predictions', oldUid));
+      if (predSnap.exists()) {
+        await setDoc(doc(db, 'games', upperCode, 'predictions', user.uid), predSnap.data());
+        await deleteDoc(doc(db, 'games', upperCode, 'predictions', oldUid));
+      }
+
+      setGameCode(upperCode);
+      return;
+    }
+
+    // New player joining
+    if (data.phase !== 'lobby') throw new Error('Game already started');
+    const playerCount = Object.values(data.players).filter(p => !p.isHost).length;
+    if (playerCount >= MAX_PLAYERS) throw new Error('Game is full');
 
     await updateDoc(doc(db, 'games', upperCode), {
       [`players.${user.uid}`]: {
