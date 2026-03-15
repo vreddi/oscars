@@ -54,7 +54,7 @@ export function useGame() {
     await updateDoc(doc(db, 'games', upperCode), {
       [`players.${user.uid}`]: {
         displayName,
-        avatarSeed: user.uid,
+        avatarSeed: avatarSeed || user.uid,
         joinedAt: serverTimestamp(),
         isAdmin: false,
       },

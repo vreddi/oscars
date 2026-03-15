@@ -21,11 +21,15 @@ export function ResultsPage() {
   }
 
   const winner = leaderboard[0];
+  const tiedWinners = winner
+    ? leaderboard.filter(e => e.score === winner.score && e.correctPicks === winner.correctPicks)
+    : [];
+  const isTie = tiedWinners.length > 1;
 
   return (
     <div className="page">
       <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: '2.5rem' }}>🏆</div>
+        <div style={{ fontSize: '2.5rem' }}>{isTie ? '🤝' : '🏆'}</div>
         <h1 style={{
           fontFamily: 'var(--font-heading)',
           fontSize: '1.8rem',
@@ -38,7 +42,9 @@ export function ResultsPage() {
         </h1>
         {winner && (
           <p style={{ color: 'var(--ivory-dim)', fontSize: '0.9rem' }}>
-            {winner.displayName} wins with {winner.score} points!
+            {isTie
+              ? `It's a tie! ${tiedWinners.map(w => w.displayName).join(' & ')} tied with ${winner.score} points!`
+              : `${winner.displayName} wins with ${winner.score} points!`}
           </p>
         )}
       </div>
