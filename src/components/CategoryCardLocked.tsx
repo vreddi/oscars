@@ -1,3 +1,4 @@
+import { getWinnerIds } from '../utils/scoring';
 import type { Category, RevealedCategory } from '../types';
 
 interface CategoryCardLockedProps {
@@ -8,9 +9,10 @@ interface CategoryCardLockedProps {
 
 export function CategoryCardLocked({ category, pick, revealed }: CategoryCardLockedProps) {
   const isRevealed = !!revealed;
-  const isCorrect = isRevealed && pick === revealed.winnerId;
+  const winnerIds = revealed ? getWinnerIds(revealed) : [];
+  const isCorrect = isRevealed && !!pick && winnerIds.includes(pick);
   const pickedNominee = category.nominees.find(n => n.id === pick);
-  const winnerNominee = revealed ? category.nominees.find(n => n.id === revealed.winnerId) : null;
+  const winnerNominees = winnerIds.map(id => category.nominees.find(n => n.id === id)).filter(Boolean);
 
   return (
     <div
@@ -40,9 +42,10 @@ export function CategoryCardLocked({ category, pick, revealed }: CategoryCardLoc
             {pickedNominee?.name ?? 'None'}
           </span>
         </div>
-        {isRevealed && !isCorrect && winnerNominee && (
+        {isRevealed && !isCorrect && winnerNominees.length > 0 && (
           <div style={{ color: 'var(--green)', marginTop: 4 }}>
-            Winner: {winnerNominee.name}
+            {winnerNominees.length > 1 ? 'Tied: ' : 'Winner: '}
+            {winnerNominees.map(n => n!.name).join(' & ')}
           </div>
         )}
       </div>

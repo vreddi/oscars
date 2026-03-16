@@ -17,7 +17,7 @@ export interface Player {
 export type GamePhase = 'lobby' | 'predictions' | 'live' | 'ended';
 
 export interface RevealedCategory {
-  winnerId: string;
+  winnerId: string | string[];
   revealedAt: Timestamp;
 }
 

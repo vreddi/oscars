@@ -12,7 +12,7 @@ export function useAdmin() {
     });
   };
 
-  const revealWinner = async (categoryIndex: number, winnerId: string) => {
+  const revealWinner = async (categoryIndex: number, winnerId: string | string[]) => {
     if (!gameCode) return;
     await updateDoc(doc(db, 'games', gameCode), {
       [`revealedCategories.${categoryIndex}`]: {

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useGameContext } from '../context/GameContext';
 import { usePredictions } from '../hooks/usePredictions';
+import { getWinnerIds } from '../utils/scoring';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { categories } from '../data/categories';
 import { TabBar } from '../components/TabBar';
@@ -55,7 +56,7 @@ export function LivePage() {
       const revealed = game.revealedCategories[key];
       const pick = predictions.picks[key];
 
-      if (pick === revealed.winnerId) {
+      if (pick && getWinnerIds(revealed).includes(pick)) {
         // Correct pick: confetti + success sound
         setShowCorrect(true);
         try { playSuccess(); } catch {}

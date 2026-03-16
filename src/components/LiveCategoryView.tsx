@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { categories } from '../data/categories';
 import { useTmdbImage } from '../hooks/useTmdbImage';
+import { getWinnerIds } from '../utils/scoring';
 import type { Nominee, RevealedCategory } from '../types';
 
 interface LiveCategoryViewProps {
@@ -101,7 +102,8 @@ export function LiveCategoryView({ categoryIndex, pick, revealed }: LiveCategory
   if (!category) return null;
 
   const isRevealed = !!revealed;
-  const isCorrect = isRevealed && pick === revealed.winnerId;
+  const winnerIds = revealed ? getWinnerIds(revealed) : [];
+  const isCorrect = isRevealed && !!pick && winnerIds.includes(pick);
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -130,7 +132,7 @@ export function LiveCategoryView({ categoryIndex, pick, revealed }: LiveCategory
             nominee={nominee}
             categoryType={category.type}
             isPick={pick === nominee.id}
-            isWinner={revealed?.winnerId === nominee.id}
+            isWinner={winnerIds.includes(nominee.id)}
             isRevealed={isRevealed}
             isCorrect={isCorrect}
           />

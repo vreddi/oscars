@@ -6,6 +6,7 @@ import { useAdmin } from '../hooks/useAdmin';
 import { useGame } from '../hooks/useGame';
 import { usePredictions } from '../hooks/usePredictions';
 import { useLeaderboard } from '../hooks/useLeaderboard';
+import { getWinnerIds } from '../utils/scoring';
 import { categories } from '../data/categories';
 import { TestModeBanner } from '../components/TestModeBanner';
 import { TabBar } from '../components/TabBar';
@@ -24,6 +25,8 @@ export function AdminPage() {
   const { predictions } = usePredictions();
   const leaderboard = useLeaderboard();
   const [selectedWinners, setSelectedWinners] = useState<Record<number, string>>({});
+  const [tieWinners, setTieWinners] = useState<Record<number, string[]>>({});
+  const [tieMode, setTieMode] = useState<Record<number, boolean>>({});
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
@@ -102,9 +105,11 @@ export function AdminPage() {
                 const isRevealed = !!game.revealedCategories[cat.id];
                 const isCurrent = game.currentCategory === cat.id;
                 const winner = game.revealedCategories[cat.id];
-                const winnerName = winner
-                  ? cat.nominees.find(n => n.id === winner.winnerId)?.name
+                const winnerNames = winner
+                  ? getWinnerIds(winner).map(id => cat.nominees.find(n => n.id === id)?.name).filter(Boolean).join(' & ')
                   : null;
+                const isTie = !!tieMode[cat.id];
+                const currentTieWinners = tieWinners[cat.id] ?? [];
 
                 return (
                   <div
@@ -121,33 +126,78 @@ export function AdminPage() {
                       </h3>
                       {isRevealed && (
                         <span style={{ fontSize: '0.75rem', color: 'var(--green)' }}>
-                          Winner: {winnerName}
+                          {winnerNames && (getWinnerIds(winner).length > 1 ? `Tied: ${winnerNames}` : `Winner: ${winnerNames}`)}
                         </span>
                       )}
                     </div>
 
                     {!isRevealed && (
                       <>
-                        <select
-                          value={selectedWinners[cat.id] ?? ''}
-                          onChange={(e) => setSelectedWinners(prev => ({ ...prev, [cat.id]: e.target.value }))}
-                          style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            background: 'var(--black-light)',
-                            color: 'var(--ivory)',
-                            border: '1px solid #333',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '0.85rem',
+                        {!isTie ? (
+                          <select
+                            value={selectedWinners[cat.id] ?? ''}
+                            onChange={(e) => setSelectedWinners(prev => ({ ...prev, [cat.id]: e.target.value }))}
+                            style={{
+                              width: '100%',
+                              padding: '8px 12px',
+                              background: 'var(--black-light)',
+                              color: 'var(--ivory)',
+                              border: '1px solid #333',
+                              borderRadius: 'var(--radius-sm)',
+                              fontSize: '0.85rem',
+                              marginBottom: 8,
+                            }}
+                          >
+                            <option value="">Select winner...</option>
+                            {cat.nominees.map(n => (
+                              <option key={n.id} value={n.id}>{n.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 4,
                             marginBottom: 8,
-                          }}
-                        >
-                          <option value="">Select winner...</option>
-                          {cat.nominees.map(n => (
-                            <option key={n.id} value={n.id}>{n.name}</option>
-                          ))}
-                        </select>
-                        <div style={{ display: 'flex', gap: 6 }}>
+                          }}>
+                            {cat.nominees.map(n => (
+                              <label
+                                key={n.id}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                  padding: '6px 12px',
+                                  background: currentTieWinners.includes(n.id) ? 'var(--green-bg)' : 'var(--black-light)',
+                                  border: currentTieWinners.includes(n.id) ? '1px solid var(--green)' : '1px solid #333',
+                                  borderRadius: 'var(--radius-sm)',
+                                  fontSize: '0.85rem',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={currentTieWinners.includes(n.id)}
+                                  onChange={(e) => {
+                                    setTieWinners(prev => {
+                                      const current = prev[cat.id] ?? [];
+                                      return {
+                                        ...prev,
+                                        [cat.id]: e.target.checked
+                                          ? [...current, n.id]
+                                          : current.filter(id => id !== n.id),
+                                      };
+                                    });
+                                  }}
+                                  style={{ accentColor: 'var(--green)' }}
+                                />
+                                {n.name}
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                           <button
                             className="btn-secondary"
                             onClick={() => setCurrentCategory(cat.id)}
@@ -163,10 +213,14 @@ export function AdminPage() {
                           <button
                             className="btn-secondary"
                             onClick={() => {
-                              const winnerId = selectedWinners[cat.id];
-                              if (winnerId) revealWinner(cat.id, winnerId);
+                              if (isTie) {
+                                if (currentTieWinners.length >= 2) revealWinner(cat.id, currentTieWinners);
+                              } else {
+                                const winnerId = selectedWinners[cat.id];
+                                if (winnerId) revealWinner(cat.id, winnerId);
+                              }
                             }}
-                            disabled={!selectedWinners[cat.id]}
+                            disabled={isTie ? currentTieWinners.length < 2 : !selectedWinners[cat.id]}
                             style={{
                               flex: 1,
                               padding: '8px',
@@ -175,7 +229,21 @@ export function AdminPage() {
                               color: 'var(--green)',
                             }}
                           >
-                            Reveal Winner
+                            Reveal {isTie ? 'Tie' : 'Winner'}
+                          </button>
+                          <button
+                            onClick={() => setTieMode(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
+                            style={{
+                              padding: '8px',
+                              fontSize: '0.7rem',
+                              background: isTie ? 'var(--gold-dim)' : 'transparent',
+                              border: `1px solid ${isTie ? 'var(--gold)' : '#555'}`,
+                              borderRadius: 'var(--radius-sm)',
+                              color: isTie ? 'var(--gold)' : 'var(--ivory-dim)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Tie
                           </button>
                         </div>
                       </>
